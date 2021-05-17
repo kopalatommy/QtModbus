@@ -1,0 +1,21 @@
+QMAKE_CXX.QT_COMPILER_STDCXX = 201402L
+QMAKE_CXX.QMAKE_GCC_MAJOR_VERSION = 10
+QMAKE_CXX.QMAKE_GCC_MINOR_VERSION = 1
+QMAKE_CXX.QMAKE_GCC_PATCH_VERSION = 0
+QMAKE_CXX.COMPILER_MACROS = \
+    QT_COMPILER_STDCXX \
+    QMAKE_GCC_MAJOR_VERSION \
+    QMAKE_GCC_MINOR_VERSION \
+    QMAKE_GCC_PATCH_VERSION
+QMAKE_CXX.INCDIRS = \
+    /opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0 \
+    /opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0/arm-linux-gnueabihf \
+    /opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0/backward \
+    /opt/cross-pi-gcc/lib/gcc/arm-linux-gnueabihf/10.1.0/include \
+    /opt/cross-pi-gcc/lib/gcc/arm-linux-gnueabihf/10.1.0/include-fixed \
+    /opt/cross-pi-gcc/arm-linux-gnueabihf/include
+QMAKE_CXX.LIBDIRS = \
+    /opt/cross-pi-gcc/lib/gcc/arm-linux-gnueabihf/10.1.0 \
+    /opt/cross-pi-gcc/arm-linux-gnueabihf/lib \
+    /home/tommy/raspi/sysroot/lib \
+    /home/tommy/raspi/sysroot/usr/lib
