@@ -63,7 +63,7 @@ void ModbusSlave::ParseData(QByteArray message, QTcpSocket * sender)
         //Check function code
         switch (message.at(7)) {
         case READ_COILS:
-            sender->write(ReadCoils(message));
+            qDebug() << "Wrote: " << sender->write(ReadCoils(message));
             break;
 
         case READ_INPUTS:
@@ -87,7 +87,7 @@ void ModbusSlave::ParseData(QByteArray message, QTcpSocket * sender)
             break;
 
         case SET_MULTIPLE_COILS:
-            sender->write(WriteMultipleCoils(message));
+            qDebug() << "Wrote: " << sender->write(WriteMultipleCoils(message));
             break;
 
         case SET_MULTIPLE_REGISTERS:
@@ -158,10 +158,12 @@ QByteArray ModbusSlave::ReadCoils(QByteArray message)
         length.word = numBytes;
         //Num bytes
         response.append(length.bytes[0]);
+
+        QList<char> values = ModbusDatatable::ConvertList(dataTable->GetCoils(address, quantity.word));
         //The actual bytes
         for(int i = 0; i < numBytes; i++)
         {
-            response.append(CHAR_MAX);
+            response.append(values[i]);
         }
     }
 
@@ -222,14 +224,14 @@ QByteArray ModbusSlave::ReadDiscreteInputs(QByteArray message)
         length.word = numBytes;
         //Num bytes
         response.append(length.bytes[0]);
+
+        QList<char> bytes = ModbusDatatable::ConvertList(dataTable->GetDiscreteInputs(address, quantity.word));
         //The actual bytes
         for(int i = 0; i < numBytes; i++)
         {
-            response.append(CHAR_MAX);
+            response.append(bytes[i]);
         }
     }
-
-    qDebug() << "Responce: " << Helpers::HexToDec(response);
 
     return response;
 }
@@ -289,16 +291,15 @@ QByteArray ModbusSlave::ReadHoldingRegisters(QByteArray message)
         //Num bytes
         response.append(length.bytes[0]);
         //The actual bytes
+        QList<short> regs = dataTable->GetInputRegisters(address, quantity.word);
         byteArray reg;
         for(short i = 0; i < numBytes; i++)
         {
-            reg.word = i;
+            reg.word = regs[i];
             response.append(reg.bytes[1]);
             response.append(reg.bytes[0]);
         }
     }
-
-    qDebug() << "Responce: " << Helpers::HexToDec(response);
 
     return response;
 }
@@ -358,16 +359,15 @@ QByteArray ModbusSlave::ReadInputRegisters(QByteArray message)
         //Num bytes
         response.append(length.bytes[0]);
         //The actual bytes
+        QList<short> regs = dataTable->GetHoldingRegisters(address, quantity.word);
         byteArray reg;
         for(short i = 0; i < numBytes; i++)
         {
-            reg.word = i;
+            reg.word = regs[i];
             response.append(reg.bytes[1]);
             response.append(reg.bytes[0]);
         }
     }
-
-    qDebug() << "Responce: " << Helpers::HexToDec(response);
 
     return response;
 }
@@ -402,8 +402,6 @@ QByteArray ModbusSlave::WriteSingleCoil(QByteArray message)
         value.bytes[1] = message[10];
         value.bytes[0] = message[11];
 
-        qDebug() << "Setting coil at " << address.word << " to " << (value.word == 0xFF ? "On" : "Off");
-
         //Build response
         //Transaction ID
         response.append(messageID.bytes[1]);
@@ -425,7 +423,7 @@ QByteArray ModbusSlave::WriteSingleCoil(QByteArray message)
         response.append(value.bytes[1]);
         response.append(value.bytes[0]);
 
-        qDebug() << "Responce: " << Helpers::HexToDec(response);
+        dataTable->SetCoil(address.word, value.word == 0xFF);
 
         return response;
     }
@@ -463,8 +461,6 @@ QByteArray ModbusSlave::WriteSingleRegister(QByteArray message)
         value.bytes[1] = message[10];
         value.bytes[0] = message[11];
 
-        qDebug() << "Setting register at " << address.word << " to " << value.word;
-
         //Build response
         //Transaction ID
         response.append(messageID.bytes[1]);
@@ -486,7 +482,7 @@ QByteArray ModbusSlave::WriteSingleRegister(QByteArray message)
         response.append(value.bytes[1]);
         response.append(value.bytes[0]);
 
-        qDebug() << "Responce: " << Helpers::HexToDec(response);
+        dataTable->SetHoldingRegister(address.word, value.word);
 
         return response;
     }
@@ -527,11 +523,12 @@ QByteArray ModbusSlave::WriteMultipleCoils(QByteArray message)
         char bytes = message.at(12);
 
         //Get the byte values
-        qDebug() << "Setting " << length.word << " coils starting at " << address.word;
+        QList<char> values;
         for(int i = 0; i < bytes; i++)
         {
-            qDebug() << "Byte " << i << " = " << QString::number(message.at(12 + i));
+            values.append(message.at(12 + i));
         }
+        dataTable->SetCoils(address.word, ModbusDatatable::ConvertList(values));
 
         //Build response
         //Transaction ID
@@ -553,8 +550,6 @@ QByteArray ModbusSlave::WriteMultipleCoils(QByteArray message)
         //Value
         response.append(length.bytes[1]);
         response.append(length.bytes[0]);
-
-        qDebug() << "Responce: " << Helpers::HexToDec(response);
 
         return response;
     }
@@ -595,15 +590,15 @@ QByteArray ModbusSlave::WriteMultipleRegisters(QByteArray message)
         char bytes = message.at(12);
 
         //Get the byte values
-        qDebug() << "Setting " << length.word << " coils starting at " << address.word;
+        QList<short> values;
         byteArray reg;
         for(int i = 0; i < bytes; i++)
         {
             reg.bytes[1] = message.at(12 + (i * 2 + 1));
             reg.bytes[0] = message.at(12 + (i * 2));
-
-            qDebug() << "Register " << i << " = " << reg.word;
+            values.append(reg.word);
         }
+        dataTable->SetHoldingRegisters(address.word, values);
 
         //Build response
         //Transaction ID
@@ -625,8 +620,6 @@ QByteArray ModbusSlave::WriteMultipleRegisters(QByteArray message)
         //Value
         response.append(length.bytes[1]);
         response.append(length.bytes[0]);
-
-        qDebug() << "Responce: " << Helpers::HexToDec(response);
 
         return response;
     }

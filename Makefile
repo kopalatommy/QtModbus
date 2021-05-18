@@ -61,6 +61,7 @@ SOURCES       = helpers.cpp \
 		modbusmaster.cpp \
 		modbusslave.cpp moc_modbus.cpp \
 		moc_modbusbase.cpp \
+		moc_modbusdatatable.cpp \
 		moc_modbushandler.cpp \
 		moc_modbusslave.cpp
 OBJECTS       = helpers.o \
@@ -73,6 +74,7 @@ OBJECTS       = helpers.o \
 		modbusslave.o \
 		moc_modbus.o \
 		moc_modbusbase.o \
+		moc_modbusdatatable.o \
 		moc_modbushandler.o \
 		moc_modbusslave.o
 DIST          = /home/tommy/raspi/qt5/mkspecs/features/spec_pre.prf \
@@ -388,9 +390,9 @@ compiler_moc_predefs_clean:
 moc_predefs.h: /home/tommy/raspi/qt5/mkspecs/features/data/dummy.cpp
 	/opt/cross-pi-gcc/bin/arm-linux-gnueabihf-g++ -pipe -marm -mfpu=vfp -mtune=arm1176jzf-s -march=armv6zk -mabi=aapcs-linux -mfloat-abi=hard --sysroot=/home/tommy/raspi/sysroot -O2 -std=gnu++11 -Wall -Wextra -dM -E -o moc_predefs.h /home/tommy/raspi/qt5/mkspecs/features/data/dummy.cpp
 
-compiler_moc_header_make_all: moc_modbus.cpp moc_modbusbase.cpp moc_modbushandler.cpp moc_modbusslave.cpp
+compiler_moc_header_make_all: moc_modbus.cpp moc_modbusbase.cpp moc_modbusdatatable.cpp moc_modbushandler.cpp moc_modbusslave.cpp
 compiler_moc_header_clean:
-	-$(DEL_FILE) moc_modbus.cpp moc_modbusbase.cpp moc_modbushandler.cpp moc_modbusslave.cpp
+	-$(DEL_FILE) moc_modbus.cpp moc_modbusbase.cpp moc_modbusdatatable.cpp moc_modbushandler.cpp moc_modbusslave.cpp
 moc_modbus.cpp: modbus.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/QObject \
 		/home/tommy/raspi/qt5pi/include/QtCore/qobject.h \
@@ -525,9 +527,93 @@ moc_modbusbase.cpp: modbusbase.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/qcontainerfwd.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/qobject_impl.h \
 		modbusdatatable.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/QDebug \
+		/home/tommy/raspi/qt5pi/include/QtCore/qdebug.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qhash.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qmap.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qtextstream.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qiodevice.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qlocale.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qvariant.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qshareddata.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qset.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qcontiguouscache.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qsharedpointer.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qsharedpointer_impl.h \
 		moc_predefs.h \
 		/home/tommy/raspi/qt5/bin/moc
 	/home/tommy/raspi/qt5/bin/moc $(DEFINES) --include /mnt/d/_Work/ModbusTest/moc_predefs.h -I/home/tommy/raspi/qt5/mkspecs/devices/linux-rasp-pi-g++ -I/mnt/d/_Work/ModbusTest -I/home/tommy/raspi/qt5pi/include -I/home/tommy/raspi/qt5pi/include/QtNetwork -I/home/tommy/raspi/qt5pi/include/QtCore -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0 -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0/arm-linux-gnueabihf -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0/backward -I/opt/cross-pi-gcc/lib/gcc/arm-linux-gnueabihf/10.1.0/include -I/opt/cross-pi-gcc/lib/gcc/arm-linux-gnueabihf/10.1.0/include-fixed -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include modbusbase.h -o moc_modbusbase.cpp
+
+moc_modbusdatatable.cpp: modbusdatatable.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/QObject \
+		/home/tommy/raspi/qt5pi/include/QtCore/qobject.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qobjectdefs.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qnamespace.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qglobal.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qconfig-bootstrapped.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qconfig.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qtcore-config.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qsystemdetection.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qprocessordetection.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qcompilerdetection.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qtypeinfo.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qsysinfo.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qlogging.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qflags.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qatomic.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qbasicatomic.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qatomic_bootstrap.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qgenericatomic.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qatomic_cxx11.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qatomic_msvc.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qglobalstatic.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qmutex.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qnumeric.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qversiontagging.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qobjectdefs_impl.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qstring.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qchar.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qbytearray.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qrefcount.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qarraydata.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qstringliteral.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qstringalgorithms.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qstringview.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qstringbuilder.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qlist.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qalgorithms.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qiterator.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qhashfunctions.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qpair.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qvector.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qcontainertools_impl.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qpoint.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qbytearraylist.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qstringlist.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qregexp.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qstringmatcher.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qcoreevent.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qscopedpointer.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qmetatype.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qvarlengtharray.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qcontainerfwd.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qobject_impl.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/QDebug \
+		/home/tommy/raspi/qt5pi/include/QtCore/qdebug.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qhash.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qmap.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qtextstream.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qiodevice.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qlocale.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qvariant.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qshareddata.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qset.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qcontiguouscache.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qsharedpointer.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qsharedpointer_impl.h \
+		moc_predefs.h \
+		/home/tommy/raspi/qt5/bin/moc
+	/home/tommy/raspi/qt5/bin/moc $(DEFINES) --include /mnt/d/_Work/ModbusTest/moc_predefs.h -I/home/tommy/raspi/qt5/mkspecs/devices/linux-rasp-pi-g++ -I/mnt/d/_Work/ModbusTest -I/home/tommy/raspi/qt5pi/include -I/home/tommy/raspi/qt5pi/include/QtNetwork -I/home/tommy/raspi/qt5pi/include/QtCore -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0 -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0/arm-linux-gnueabihf -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0/backward -I/opt/cross-pi-gcc/lib/gcc/arm-linux-gnueabihf/10.1.0/include -I/opt/cross-pi-gcc/lib/gcc/arm-linux-gnueabihf/10.1.0/include-fixed -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include modbusdatatable.h -o moc_modbusdatatable.cpp
 
 moc_modbushandler.cpp: modbushandler.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/QObject \
@@ -607,11 +693,11 @@ moc_modbushandler.cpp: modbushandler.h \
 		modbusmaster.h \
 		modbusbase.h \
 		modbusdatatable.h \
-		modbusslave.h \
+		helpers.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/QString \
+		modbusslave.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/QtMath \
 		/home/tommy/raspi/qt5pi/include/QtCore/qmath.h \
-		helpers.h \
 		moc_predefs.h \
 		/home/tommy/raspi/qt5/bin/moc
 	/home/tommy/raspi/qt5/bin/moc $(DEFINES) --include /mnt/d/_Work/ModbusTest/moc_predefs.h -I/home/tommy/raspi/qt5/mkspecs/devices/linux-rasp-pi-g++ -I/mnt/d/_Work/ModbusTest -I/home/tommy/raspi/qt5pi/include -I/home/tommy/raspi/qt5pi/include/QtNetwork -I/home/tommy/raspi/qt5pi/include/QtCore -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0 -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0/arm-linux-gnueabihf -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0/backward -I/opt/cross-pi-gcc/lib/gcc/arm-linux-gnueabihf/10.1.0/include -I/opt/cross-pi-gcc/lib/gcc/arm-linux-gnueabihf/10.1.0/include-fixed -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include modbushandler.h -o moc_modbushandler.cpp
@@ -839,8 +925,6 @@ main.o: main.cpp /home/tommy/raspi/qt5pi/include/QtCore/QCoreApplication \
 		/home/tommy/raspi/qt5pi/include/QtCore/qcontainerfwd.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/qobject_impl.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/qeventloop.h \
-		modbus.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/QObject \
 		/home/tommy/raspi/qt5pi/include/QtCore/QDebug \
 		/home/tommy/raspi/qt5pi/include/QtCore/qdebug.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/qhash.h \
@@ -854,6 +938,8 @@ main.o: main.cpp /home/tommy/raspi/qt5pi/include/QtCore/QCoreApplication \
 		/home/tommy/raspi/qt5pi/include/QtCore/qcontiguouscache.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/qsharedpointer.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/qsharedpointer_impl.h \
+		modbus.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/QObject \
 		/home/tommy/raspi/qt5pi/include/QtNetwork/QTcpServer \
 		/home/tommy/raspi/qt5pi/include/QtNetwork/qtcpserver.h \
 		/home/tommy/raspi/qt5pi/include/QtNetwork/qtnetworkglobal.h \
@@ -1003,10 +1089,89 @@ modbusbase.o: modbusbase.cpp modbusbase.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/qvarlengtharray.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/qcontainerfwd.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/qobject_impl.h \
-		modbusdatatable.h
+		modbusdatatable.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/QDebug \
+		/home/tommy/raspi/qt5pi/include/QtCore/qdebug.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qhash.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qmap.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qtextstream.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qiodevice.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qlocale.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qvariant.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qshareddata.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qset.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qcontiguouscache.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qsharedpointer.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qsharedpointer_impl.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o modbusbase.o modbusbase.cpp
 
-modbusdatatable.o: modbusdatatable.cpp modbusdatatable.h
+modbusdatatable.o: modbusdatatable.cpp modbusdatatable.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/QObject \
+		/home/tommy/raspi/qt5pi/include/QtCore/qobject.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qobjectdefs.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qnamespace.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qglobal.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qconfig-bootstrapped.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qconfig.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qtcore-config.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qsystemdetection.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qprocessordetection.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qcompilerdetection.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qtypeinfo.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qsysinfo.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qlogging.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qflags.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qatomic.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qbasicatomic.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qatomic_bootstrap.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qgenericatomic.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qatomic_cxx11.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qatomic_msvc.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qglobalstatic.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qmutex.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qnumeric.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qversiontagging.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qobjectdefs_impl.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qstring.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qchar.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qbytearray.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qrefcount.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qarraydata.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qstringliteral.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qstringalgorithms.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qstringview.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qstringbuilder.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qlist.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qalgorithms.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qiterator.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qhashfunctions.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qpair.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qvector.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qcontainertools_impl.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qpoint.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qbytearraylist.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qstringlist.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qregexp.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qstringmatcher.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qcoreevent.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qscopedpointer.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qmetatype.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qvarlengtharray.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qcontainerfwd.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qobject_impl.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/QDebug \
+		/home/tommy/raspi/qt5pi/include/QtCore/qdebug.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qhash.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qmap.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qtextstream.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qiodevice.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qlocale.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qvariant.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qshareddata.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qset.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qcontiguouscache.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qsharedpointer.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qsharedpointer_impl.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o modbusdatatable.o modbusdatatable.cpp
 
 modbushandler.o: modbushandler.cpp modbushandler.h \
@@ -1087,11 +1252,11 @@ modbushandler.o: modbushandler.cpp modbushandler.h \
 		modbusmaster.h \
 		modbusbase.h \
 		modbusdatatable.h \
-		modbusslave.h \
+		helpers.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/QString \
+		modbusslave.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/QtMath \
-		/home/tommy/raspi/qt5pi/include/QtCore/qmath.h \
-		helpers.h
+		/home/tommy/raspi/qt5pi/include/QtCore/qmath.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o modbushandler.o modbushandler.cpp
 
 modbusmaster.o: modbusmaster.cpp modbusmaster.h \
@@ -1169,7 +1334,10 @@ modbusmaster.o: modbusmaster.cpp modbusmaster.h \
 		/home/tommy/raspi/qt5pi/include/QtNetwork/qhostaddress.h \
 		modbusbase.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/QObject \
-		modbusdatatable.h
+		modbusdatatable.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/QDebug \
+		helpers.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/QString
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o modbusmaster.o modbusmaster.cpp
 
 modbusslave.o: modbusslave.cpp modbusslave.h \
@@ -1260,6 +1428,9 @@ moc_modbus.o: moc_modbus.cpp
 
 moc_modbusbase.o: moc_modbusbase.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_modbusbase.o moc_modbusbase.cpp
+
+moc_modbusdatatable.o: moc_modbusdatatable.cpp 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_modbusdatatable.o moc_modbusdatatable.cpp
 
 moc_modbushandler.o: moc_modbushandler.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_modbushandler.o moc_modbushandler.cpp
