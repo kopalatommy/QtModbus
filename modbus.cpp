@@ -73,31 +73,3 @@ void Modbus::ParseMessage(QByteArray arr)
 
    qDebug() << "Function: " << QString::number(arr[7]);
 }
-
-/*void ModbusSlave::HandleReadCoils(QByteArray data)
-{
-    char slaveAddress = data.at(0);
-
-    char function = data.at(1);
-
-    byteArray startAddress;
-    startAddress.bytes[0] = data.at(2);
-    startAddress.bytes[1] = data.at(3);
-
-    byteArray quantity;
-    startAddress.bytes[0] = data.at(4);
-    startAddress.bytes[1] = data.at(5);
-
-    qDebug() << "Remaining: " << data.remove(0, 6);
-
-    QByteArray response;
-    //Add slave address
-    response.append(slaveAddress);
-    //Add function
-    response.append(function);
-    //Add count
-
-}*/
-
-
-

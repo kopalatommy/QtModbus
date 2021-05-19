@@ -3,6 +3,7 @@
 
 #include <QTcpSocket>
 #include <QTcpServer>
+#include <QTime>
 
 #include "modbusbase.h"
 #include "helpers.h"
@@ -96,9 +97,11 @@ public:
     ModbusMaster();
 
     //Returns true if the master connects to the slave
-    bool Start(QString slaveIP, ushort port, char address);
+    bool Start(QString slaveIP, ushort port, char address, ModbusDatatable * datatable);
 
     bool Close();
+
+    void ParseMessage(QByteArray message);
 
     void ReadCoils(short startAddress, short length);
     void ReadDiscreteInputs(short address, short length);
@@ -124,6 +127,21 @@ private:
     byteArray transactionID;
 
     ModbusResponse current;
+
+    QMap<int /* Message ID */, QPair<QTime /* Sent time */, QByteArray /* Message */>> messages;
+
+    int responseID;
+    int valueStart;
+    int valueCount;
+
+    void HandleReadCoilsResponse(QByteArray response);
+    void HandleReadDiscreteInputsResponse(QByteArray response);
+    void HandleReadHoldingRegistersResponse(QByteArray response);
+    void HandleReadInputRegistersResponse(QByteArray response);
+    void HandleWriteSingleCoilResponse(QByteArray response);
+    void HandleWriteSingleRegisterResponse(QByteArray response);
+    void HandleWriteMultipleCoilsResponse(QByteArray response);
+    void HandleWriteMultipleRegistersResponse(QByteArray response);
 };
 
 #endif // MODBUSMASTER_H

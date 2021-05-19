@@ -802,9 +802,9 @@ compiler_clean: compiler_moc_predefs_clean compiler_moc_header_clean
 ####### Compile
 
 helpers.o: helpers.cpp helpers.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/QDebug \
-		/home/tommy/raspi/qt5pi/include/QtCore/qdebug.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qalgorithms.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/QString \
+		/home/tommy/raspi/qt5pi/include/QtCore/qstring.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qchar.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/qglobal.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/qconfig-bootstrapped.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/qconfig.h \
@@ -826,48 +826,14 @@ helpers.o: helpers.cpp helpers.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/qmutex.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/qnumeric.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/qversiontagging.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qhash.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qchar.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qiterator.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qlist.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qrefcount.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qarraydata.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qhashfunctions.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qstring.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/qbytearray.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qrefcount.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/qnamespace.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qarraydata.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/qstringliteral.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/qstringalgorithms.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/qstringview.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qstringbuilder.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qpair.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qvector.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qcontainertools_impl.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qpoint.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qbytearraylist.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qstringlist.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qregexp.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qstringmatcher.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qmap.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qtextstream.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qiodevice.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qobject.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qobjectdefs.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qobjectdefs_impl.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qcoreevent.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qscopedpointer.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qmetatype.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qvarlengtharray.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qcontainerfwd.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qobject_impl.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qlocale.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qvariant.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qshareddata.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qset.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qcontiguouscache.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qsharedpointer.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/qsharedpointer_impl.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/QString
+		/home/tommy/raspi/qt5pi/include/QtCore/qstringbuilder.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o helpers.o helpers.cpp
 
 main.o: main.cpp /home/tommy/raspi/qt5pi/include/QtCore/QCoreApplication \

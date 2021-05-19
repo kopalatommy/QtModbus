@@ -53,17 +53,13 @@ void ModbusSlave::ParseData(QByteArray message, QTcpSocket * sender)
 {
     qDebug() << "Received: " << Helpers::HexToDec(message);
 
-    /*byteArray messageID;
-    messageID.bytes[1] = message.at(0);
-    messageID.bytes[0] = message.at(1);*/
-
     //Check address
     if(address == message.at(6))
     {
         //Check function code
         switch (message.at(7)) {
         case READ_COILS:
-            qDebug() << "Wrote: " << sender->write(ReadCoils(message));
+            sender->write(ReadCoils(message));
             break;
 
         case READ_INPUTS:
@@ -87,7 +83,7 @@ void ModbusSlave::ParseData(QByteArray message, QTcpSocket * sender)
             break;
 
         case SET_MULTIPLE_COILS:
-            qDebug() << "Wrote: " << sender->write(WriteMultipleCoils(message));
+            sender->write(WriteMultipleCoils(message));
             break;
 
         case SET_MULTIPLE_REGISTERS:
@@ -95,7 +91,7 @@ void ModbusSlave::ParseData(QByteArray message, QTcpSocket * sender)
             break;
 
         default:
-            qDebug() << "Bad funct code: " << QString::number(message.at(1));
+            qDebug() << "Bad funct code: " << QString::number(message.at(7));
         }
     }
     else
@@ -151,6 +147,7 @@ QByteArray ModbusSlave::ReadCoils(QByteArray message)
         response.append(length.bytes[1]);
         response.append(length.bytes[0]);
 
+
         //Append data
         response.append(slaveAddress);
         response.append(functCode);
@@ -159,7 +156,7 @@ QByteArray ModbusSlave::ReadCoils(QByteArray message)
         //Num bytes
         response.append(length.bytes[0]);
 
-        QList<char> values = ModbusDatatable::ConvertList(dataTable->GetCoils(address, quantity.word));
+        QList<char> values = ModbusDatatable::ConvertList(dataTable->GetCoils(start.word, quantity.word));
         //The actual bytes
         for(int i = 0; i < numBytes; i++)
         {
@@ -225,7 +222,7 @@ QByteArray ModbusSlave::ReadDiscreteInputs(QByteArray message)
         //Num bytes
         response.append(length.bytes[0]);
 
-        QList<char> bytes = ModbusDatatable::ConvertList(dataTable->GetDiscreteInputs(address, quantity.word));
+        QList<char> bytes = ModbusDatatable::ConvertList(dataTable->GetDiscreteInputs(start.word, quantity.word));
         //The actual bytes
         for(int i = 0; i < numBytes; i++)
         {
@@ -280,6 +277,7 @@ QByteArray ModbusSlave::ReadHoldingRegisters(QByteArray message)
         response.append(protocol.bytes[0]);
         //Message Length
         //Have to account for Unit ID and transaction ID
+        length.word = 3 + numBytes;
         response.append(length.bytes[1]);
         response.append(length.bytes[0]);
 
@@ -287,18 +285,24 @@ QByteArray ModbusSlave::ReadHoldingRegisters(QByteArray message)
         response.append(slaveAddress);
         response.append(functCode);
 
-        length.word = numBytes;
-        //Num bytes
-        response.append(length.bytes[0]);
+        //Number of data bytes
+        length.word = quantity.word;
+        //The reamining bytes are twice the registers
+        response.append(quantity.bytes[0] * 2);
         //The actual bytes
-        QList<short> regs = dataTable->GetInputRegisters(address, quantity.word);
+        QList<short> regs = dataTable->GetInputRegisters(start.word, quantity.word);
         byteArray reg;
-        for(short i = 0; i < numBytes; i++)
+        for(short i = 0; i < numBytes/2; i++)
         {
             reg.word = regs[i];
             response.append(reg.bytes[1]);
             response.append(reg.bytes[0]);
         }
+    }
+    else
+    {
+        qDebug() << "Received bad message in ReadHoldingRegisters";
+        qDebug() << "Received: " << (message.length() - 6) << " Expected: " << messageLength.word;
     }
 
     return response;
@@ -359,9 +363,9 @@ QByteArray ModbusSlave::ReadInputRegisters(QByteArray message)
         //Num bytes
         response.append(length.bytes[0]);
         //The actual bytes
-        QList<short> regs = dataTable->GetHoldingRegisters(address, quantity.word);
+        QList<short> regs = dataTable->GetHoldingRegisters(start.word, quantity.word);
         byteArray reg;
-        for(short i = 0; i < numBytes; i++)
+        for(short i = 0; i < numBytes / 2; i++)
         {
             reg.word = regs[i];
             response.append(reg.bytes[1]);
@@ -526,7 +530,7 @@ QByteArray ModbusSlave::WriteMultipleCoils(QByteArray message)
         QList<char> values;
         for(int i = 0; i < bytes; i++)
         {
-            values.append(message.at(12 + i));
+            values.append(message.at(13 + i));
         }
         dataTable->SetCoils(address.word, ModbusDatatable::ConvertList(values));
 
@@ -538,6 +542,7 @@ QByteArray ModbusSlave::WriteMultipleCoils(QByteArray message)
         response.append(protocol.bytes[1]);
         response.append(protocol.bytes[0]);
         //Message length
+        messageLength.word = 6;
         response.append(messageLength.bytes[1]);
         response.append(messageLength.bytes[0]);
         //Device address
@@ -552,6 +557,12 @@ QByteArray ModbusSlave::WriteMultipleCoils(QByteArray message)
         response.append(length.bytes[0]);
 
         return response;
+    }
+    else
+    {
+        qDebug() << "Bad message";
+        qDebug() << "Received: " << (message.length() - 6);
+        qDebug() << "Expected: " << messageLength.word;
     }
 
     return QByteArray();
@@ -594,11 +605,11 @@ QByteArray ModbusSlave::WriteMultipleRegisters(QByteArray message)
         byteArray reg;
         for(int i = 0; i < bytes; i++)
         {
-            reg.bytes[1] = message.at(12 + (i * 2 + 1));
-            reg.bytes[0] = message.at(12 + (i * 2));
+            reg.bytes[1] = message.at(13 + (i * 2));
+            reg.bytes[0] = message.at(13 + (i * 2 + 1));
             values.append(reg.word);
         }
-        dataTable->SetHoldingRegisters(address.word, values);
+        dataTable->SetInputRegisters(address.word, values);
 
         //Build response
         //Transaction ID
@@ -608,6 +619,7 @@ QByteArray ModbusSlave::WriteMultipleRegisters(QByteArray message)
         response.append(protocol.bytes[1]);
         response.append(protocol.bytes[0]);
         //Message length
+        messageLength.word = 6;
         response.append(messageLength.bytes[1]);
         response.append(messageLength.bytes[0]);
         //Device address
@@ -621,7 +633,14 @@ QByteArray ModbusSlave::WriteMultipleRegisters(QByteArray message)
         response.append(length.bytes[1]);
         response.append(length.bytes[0]);
 
+        qDebug() << "Response: " << Helpers::HexToDec(response);
+
         return response;
+    }
+    else
+    {
+        qDebug() << "Error processing message in WriteMultipleRegisters";
+        qDebug() << "Message length: " << (message.length() - 6) << " Anticipated: " << messageLength.word;
     }
 
     return QByteArray();

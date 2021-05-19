@@ -1,7 +1,6 @@
 #ifndef HELPERS_H
 #define HELPERS_H
 
-#include <QDebug>
 #include <QString>
 
 class Helpers

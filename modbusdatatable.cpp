@@ -9,13 +9,9 @@ ModbusDatatable::ModbusDatatable(int numberOfCoils, int numberOfDiscreteInputs,
                                  int numberOfInputRegisters, int numberOfHoldingRegisters)
 {
     AddCoils(numberOfCoils);
-    qDebug() << "Added coils";
     AddDiscreteInputs(numberOfDiscreteInputs);
-    qDebug() << "Added discrete inputs";
-    AddDiscreteInputs(numberOfInputRegisters);
-    qDebug() << "Added input registers";
+    AddInputRegisters(numberOfInputRegisters);
     AddHoldingRegisters(numberOfHoldingRegisters);
-    qDebug() << "Added holding registers";
 }
 
 void ModbusDatatable::AddCoils(int quantity)
@@ -103,21 +99,19 @@ int ModbusDatatable::GetNumberOfCoils()
     return numberOfCoils;
 }
 
-bool ModbusDatatable::SetCoil(int address, bool value)
+void ModbusDatatable::SetCoil(int address, bool value)
 {
     if(address >= 0 && address < numberOfCoils)
     {
         coils[address] = value;
-        return true;
     }
     else
     {
-        qDebug() << "Unable to set coil at " << address << " to " << value;
-        return false;
+        throw new std::exception("Index out of bounds in SetCoil");
     }
 }
 
-bool ModbusDatatable::SetCoils(int address, QList<bool> values)
+void ModbusDatatable::SetCoils(int address, QList<bool> values)
 {
     if(address >= 0 && address + values.length() < numberOfCoils)
     {
@@ -125,12 +119,10 @@ bool ModbusDatatable::SetCoils(int address, QList<bool> values)
         {
             coils[i + address] = values[i];
         }
-        return true;
     }
     else
     {
-        qDebug() << "Unable to sets coil starting at " << address << " for " << values.length();
-        return false;
+        throw new std::runtime_error("Index out of bounds in SetCoils");
     }
 }
 
@@ -155,6 +147,8 @@ QList<bool> ModbusDatatable::GetCoils(int startAddress, int quantity)
         for(int i = 0; i < quantity; i++)
         {
             values.append(coils[i + startAddress]);
+
+            qDebug() << "Coil at " << (i + startAddress) << " = " << coils[i + startAddress];
         }
         return values;
     }
@@ -414,6 +408,8 @@ bool ModbusDatatable::SetInputRegisters(int address, QList<short> values)
     }
     else
     {
+        qDebug() << "Address: " << address;
+        qDebug() << "Number of input registers: " << numberOfInputRegisters;
         throw new std::runtime_error("Error: Unable to add Input Registers");
     }
 }
@@ -591,9 +587,9 @@ QList<bool> ModbusDatatable::ConvertList(QList<char> original)
 
     for(int i = 0, j; i < original.length(); i++)
     {
-        for(j = 0; j < 8; j++)
+        for(j = 7; j >= 0; j--)
         {
-            values.append( original[i] & (1 << j) );
+            values.append( (original[i] & (1 << j)) != 0 );
         }
     }
     return values;
@@ -606,6 +602,8 @@ QList<char> ModbusDatatable::ConvertList(QList<bool> original)
     char temp = 0;
     for(int i = 0; i < original.length(); i++)
     {
+        temp <<= 1;
+
         if(i % 8 == 0 && i != 0)
         {
             values.append(temp);
@@ -613,7 +611,6 @@ QList<char> ModbusDatatable::ConvertList(QList<bool> original)
         }
 
         temp |= static_cast<char>(original[i]);
-        temp <<= 1;
     }
 
     values.append(temp);

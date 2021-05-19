@@ -22,8 +22,8 @@ public:
     void AddCoils(int quantity, QList<bool> initialValues);
     void ResizeCoils(int quantity);
     int GetNumberOfCoils();
-    bool SetCoil(int address, bool value);
-    bool SetCoils(int address, QList<bool> values);
+    void SetCoil(int address, bool value);
+    void SetCoils(int address, QList<bool> values);
     bool GetCoil(int address);
     QList<bool> GetCoils(int startAddress, int quantity);
 
