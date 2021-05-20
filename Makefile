@@ -14,10 +14,10 @@ EQ            = =
 
 CC            = /opt/cross-pi-gcc/bin/arm-linux-gnueabihf-gcc
 CXX           = /opt/cross-pi-gcc/bin/arm-linux-gnueabihf-g++
-DEFINES       = -DQT_NO_DEBUG -DQT_NETWORK_LIB -DQT_CORE_LIB
+DEFINES       = -DQT_NO_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_CORE_LIB
 CFLAGS        = -pipe -marm -mfpu=vfp -mtune=arm1176jzf-s -march=armv6zk -mabi=aapcs-linux -mfloat-abi=hard --sysroot=/home/tommy/raspi/sysroot -O2 -Wall -Wextra -D_REENTRANT -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -marm -mfpu=vfp -mtune=arm1176jzf-s -march=armv6zk -mabi=aapcs-linux -mfloat-abi=hard --sysroot=/home/tommy/raspi/sysroot -O2 -std=gnu++11 -Wall -Wextra -D_REENTRANT -fPIC $(DEFINES)
-INCPATH       = -I. -I/home/tommy/raspi/qt5pi/include -I/home/tommy/raspi/qt5pi/include/QtNetwork -I/home/tommy/raspi/qt5pi/include/QtCore -I. -I/home/tommy/raspi/qt5/mkspecs/devices/linux-rasp-pi-g++
+INCPATH       = -I. -I/home/tommy/raspi/qt5pi/include -I/home/tommy/raspi/qt5pi/include/QtGui -I/home/tommy/raspi/qt5pi/include/QtNetwork -I/home/tommy/raspi/qt5pi/include/QtCore -I. -I/home/tommy/raspi/sysroot/opt/vc/include -I/home/tommy/raspi/sysroot/opt/vc/include/interface/vcos/pthreads -I/home/tommy/raspi/sysroot/opt/vc/include/interface/vmcs_host/linux -I/home/tommy/raspi/qt5/mkspecs/devices/linux-rasp-pi-g++
 QMAKE         = /home/tommy/raspi/qt5/bin/qmake
 DEL_FILE      = rm -f
 CHK_DIR_EXISTS= test -d
@@ -40,7 +40,7 @@ DISTNAME      = ModbusTest1.0.0
 DISTDIR = /mnt/d/_Work/ModbusTest/.tmp/ModbusTest1.0.0
 LINK          = /opt/cross-pi-gcc/bin/arm-linux-gnueabihf-g++
 LFLAGS        = -mfloat-abi=hard --sysroot=/home/tommy/raspi/sysroot -Wl,-O1 -Wl,-rpath,/usr/local/qt5pi/lib -Wl,-rpath-link,/home/tommy/raspi/sysroot/opt/vc/lib -Wl,-rpath-link,/home/tommy/raspi/sysroot/usr/lib/arm-linux-gnueabihf -Wl,-rpath-link,/home/tommy/raspi/sysroot/lib/arm-linux-gnueabihf
-LIBS          = $(SUBLIBS) /home/tommy/raspi/qt5pi/lib/libQt5Network.so /home/tommy/raspi/qt5pi/lib/libQt5Core.so -lpthread   
+LIBS          = $(SUBLIBS) -L/home/tommy/raspi/sysroot/opt/vc/lib /home/tommy/raspi/qt5pi/lib/libQt5Gui.so /home/tommy/raspi/qt5pi/lib/libQt5Network.so /home/tommy/raspi/qt5pi/lib/libQt5Core.so -lGLESv2 -lpthread   
 AR            = /opt/cross-pi-gcc/bin/arm-linux-gnueabihf-ar cqs
 RANLIB        = 
 SED           = sed
@@ -149,6 +149,7 @@ DIST          = /home/tommy/raspi/qt5/mkspecs/features/spec_pre.prf \
 		/home/tommy/raspi/qt5/mkspecs/features/resources_functions.prf \
 		/home/tommy/raspi/qt5/mkspecs/features/resources.prf \
 		/home/tommy/raspi/qt5/mkspecs/features/moc.prf \
+		/home/tommy/raspi/qt5/mkspecs/features/unix/opengl.prf \
 		/home/tommy/raspi/qt5/mkspecs/features/unix/thread.prf \
 		/home/tommy/raspi/qt5/mkspecs/features/qmake_use.prf \
 		/home/tommy/raspi/qt5/mkspecs/features/file_copies.prf \
@@ -253,6 +254,7 @@ Makefile: ModbusTest.pro /home/tommy/raspi/qt5/mkspecs/devices/linux-rasp-pi-g++
 		/home/tommy/raspi/qt5/mkspecs/features/resources_functions.prf \
 		/home/tommy/raspi/qt5/mkspecs/features/resources.prf \
 		/home/tommy/raspi/qt5/mkspecs/features/moc.prf \
+		/home/tommy/raspi/qt5/mkspecs/features/unix/opengl.prf \
 		/home/tommy/raspi/qt5/mkspecs/features/unix/thread.prf \
 		/home/tommy/raspi/qt5/mkspecs/features/qmake_use.prf \
 		/home/tommy/raspi/qt5/mkspecs/features/file_copies.prf \
@@ -334,6 +336,7 @@ Makefile: ModbusTest.pro /home/tommy/raspi/qt5/mkspecs/devices/linux-rasp-pi-g++
 /home/tommy/raspi/qt5/mkspecs/features/resources_functions.prf:
 /home/tommy/raspi/qt5/mkspecs/features/resources.prf:
 /home/tommy/raspi/qt5/mkspecs/features/moc.prf:
+/home/tommy/raspi/qt5/mkspecs/features/unix/opengl.prf:
 /home/tommy/raspi/qt5/mkspecs/features/unix/thread.prf:
 /home/tommy/raspi/qt5/mkspecs/features/qmake_use.prf:
 /home/tommy/raspi/qt5/mkspecs/features/file_copies.prf:
@@ -470,7 +473,7 @@ moc_modbus.cpp: modbus.h \
 		/home/tommy/raspi/qt5pi/include/QtNetwork/qtcpsocket.h \
 		moc_predefs.h \
 		/home/tommy/raspi/qt5/bin/moc
-	/home/tommy/raspi/qt5/bin/moc $(DEFINES) --include /mnt/d/_Work/ModbusTest/moc_predefs.h -I/home/tommy/raspi/qt5/mkspecs/devices/linux-rasp-pi-g++ -I/mnt/d/_Work/ModbusTest -I/home/tommy/raspi/qt5pi/include -I/home/tommy/raspi/qt5pi/include/QtNetwork -I/home/tommy/raspi/qt5pi/include/QtCore -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0 -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0/arm-linux-gnueabihf -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0/backward -I/opt/cross-pi-gcc/lib/gcc/arm-linux-gnueabihf/10.1.0/include -I/opt/cross-pi-gcc/lib/gcc/arm-linux-gnueabihf/10.1.0/include-fixed -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include modbus.h -o moc_modbus.cpp
+	/home/tommy/raspi/qt5/bin/moc $(DEFINES) --include /mnt/d/_Work/ModbusTest/moc_predefs.h -I/home/tommy/raspi/qt5/mkspecs/devices/linux-rasp-pi-g++ -I/mnt/d/_Work/ModbusTest -I/home/tommy/raspi/qt5pi/include -I/home/tommy/raspi/qt5pi/include/QtGui -I/home/tommy/raspi/qt5pi/include/QtNetwork -I/home/tommy/raspi/qt5pi/include/QtCore -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0 -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0/arm-linux-gnueabihf -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0/backward -I/opt/cross-pi-gcc/lib/gcc/arm-linux-gnueabihf/10.1.0/include -I/opt/cross-pi-gcc/lib/gcc/arm-linux-gnueabihf/10.1.0/include-fixed -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include modbus.h -o moc_modbus.cpp
 
 moc_modbusbase.cpp: modbusbase.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/QObject \
@@ -542,7 +545,7 @@ moc_modbusbase.cpp: modbusbase.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/qsharedpointer_impl.h \
 		moc_predefs.h \
 		/home/tommy/raspi/qt5/bin/moc
-	/home/tommy/raspi/qt5/bin/moc $(DEFINES) --include /mnt/d/_Work/ModbusTest/moc_predefs.h -I/home/tommy/raspi/qt5/mkspecs/devices/linux-rasp-pi-g++ -I/mnt/d/_Work/ModbusTest -I/home/tommy/raspi/qt5pi/include -I/home/tommy/raspi/qt5pi/include/QtNetwork -I/home/tommy/raspi/qt5pi/include/QtCore -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0 -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0/arm-linux-gnueabihf -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0/backward -I/opt/cross-pi-gcc/lib/gcc/arm-linux-gnueabihf/10.1.0/include -I/opt/cross-pi-gcc/lib/gcc/arm-linux-gnueabihf/10.1.0/include-fixed -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include modbusbase.h -o moc_modbusbase.cpp
+	/home/tommy/raspi/qt5/bin/moc $(DEFINES) --include /mnt/d/_Work/ModbusTest/moc_predefs.h -I/home/tommy/raspi/qt5/mkspecs/devices/linux-rasp-pi-g++ -I/mnt/d/_Work/ModbusTest -I/home/tommy/raspi/qt5pi/include -I/home/tommy/raspi/qt5pi/include/QtGui -I/home/tommy/raspi/qt5pi/include/QtNetwork -I/home/tommy/raspi/qt5pi/include/QtCore -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0 -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0/arm-linux-gnueabihf -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0/backward -I/opt/cross-pi-gcc/lib/gcc/arm-linux-gnueabihf/10.1.0/include -I/opt/cross-pi-gcc/lib/gcc/arm-linux-gnueabihf/10.1.0/include-fixed -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include modbusbase.h -o moc_modbusbase.cpp
 
 moc_modbusdatatable.cpp: modbusdatatable.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/QObject \
@@ -613,7 +616,7 @@ moc_modbusdatatable.cpp: modbusdatatable.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/qsharedpointer_impl.h \
 		moc_predefs.h \
 		/home/tommy/raspi/qt5/bin/moc
-	/home/tommy/raspi/qt5/bin/moc $(DEFINES) --include /mnt/d/_Work/ModbusTest/moc_predefs.h -I/home/tommy/raspi/qt5/mkspecs/devices/linux-rasp-pi-g++ -I/mnt/d/_Work/ModbusTest -I/home/tommy/raspi/qt5pi/include -I/home/tommy/raspi/qt5pi/include/QtNetwork -I/home/tommy/raspi/qt5pi/include/QtCore -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0 -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0/arm-linux-gnueabihf -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0/backward -I/opt/cross-pi-gcc/lib/gcc/arm-linux-gnueabihf/10.1.0/include -I/opt/cross-pi-gcc/lib/gcc/arm-linux-gnueabihf/10.1.0/include-fixed -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include modbusdatatable.h -o moc_modbusdatatable.cpp
+	/home/tommy/raspi/qt5/bin/moc $(DEFINES) --include /mnt/d/_Work/ModbusTest/moc_predefs.h -I/home/tommy/raspi/qt5/mkspecs/devices/linux-rasp-pi-g++ -I/mnt/d/_Work/ModbusTest -I/home/tommy/raspi/qt5pi/include -I/home/tommy/raspi/qt5pi/include/QtGui -I/home/tommy/raspi/qt5pi/include/QtNetwork -I/home/tommy/raspi/qt5pi/include/QtCore -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0 -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0/arm-linux-gnueabihf -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0/backward -I/opt/cross-pi-gcc/lib/gcc/arm-linux-gnueabihf/10.1.0/include -I/opt/cross-pi-gcc/lib/gcc/arm-linux-gnueabihf/10.1.0/include-fixed -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include modbusdatatable.h -o moc_modbusdatatable.cpp
 
 moc_modbushandler.cpp: modbushandler.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/QObject \
@@ -691,16 +694,36 @@ moc_modbushandler.cpp: modbushandler.h \
 		/home/tommy/raspi/qt5pi/include/QtNetwork/QTcpSocket \
 		/home/tommy/raspi/qt5pi/include/QtNetwork/qtcpsocket.h \
 		modbusmaster.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/QTime \
+		/home/tommy/raspi/qt5pi/include/QtCore/qdatetime.h \
 		modbusbase.h \
 		modbusdatatable.h \
 		helpers.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/QString \
+		/home/tommy/raspi/qt5pi/include/QtGui/QKeyEvent \
+		/home/tommy/raspi/qt5pi/include/QtGui/qevent.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qtguiglobal.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qtgui-config.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qwindowdefs.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qwindowdefs_win.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qregion.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qrect.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qmargins.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qsize.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qdatastream.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qkeysequence.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qurl.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qurlquery.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qfile.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qfiledevice.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qvector2d.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qtouchdevice.h \
 		modbusslave.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/QtMath \
 		/home/tommy/raspi/qt5pi/include/QtCore/qmath.h \
 		moc_predefs.h \
 		/home/tommy/raspi/qt5/bin/moc
-	/home/tommy/raspi/qt5/bin/moc $(DEFINES) --include /mnt/d/_Work/ModbusTest/moc_predefs.h -I/home/tommy/raspi/qt5/mkspecs/devices/linux-rasp-pi-g++ -I/mnt/d/_Work/ModbusTest -I/home/tommy/raspi/qt5pi/include -I/home/tommy/raspi/qt5pi/include/QtNetwork -I/home/tommy/raspi/qt5pi/include/QtCore -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0 -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0/arm-linux-gnueabihf -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0/backward -I/opt/cross-pi-gcc/lib/gcc/arm-linux-gnueabihf/10.1.0/include -I/opt/cross-pi-gcc/lib/gcc/arm-linux-gnueabihf/10.1.0/include-fixed -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include modbushandler.h -o moc_modbushandler.cpp
+	/home/tommy/raspi/qt5/bin/moc $(DEFINES) --include /mnt/d/_Work/ModbusTest/moc_predefs.h -I/home/tommy/raspi/qt5/mkspecs/devices/linux-rasp-pi-g++ -I/mnt/d/_Work/ModbusTest -I/home/tommy/raspi/qt5pi/include -I/home/tommy/raspi/qt5pi/include/QtGui -I/home/tommy/raspi/qt5pi/include/QtNetwork -I/home/tommy/raspi/qt5pi/include/QtCore -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0 -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0/arm-linux-gnueabihf -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0/backward -I/opt/cross-pi-gcc/lib/gcc/arm-linux-gnueabihf/10.1.0/include -I/opt/cross-pi-gcc/lib/gcc/arm-linux-gnueabihf/10.1.0/include-fixed -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include modbushandler.h -o moc_modbushandler.cpp
 
 moc_modbusslave.cpp: modbusslave.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/QDebug \
@@ -785,7 +808,7 @@ moc_modbusslave.cpp: modbusslave.h \
 		modbusdatatable.h \
 		moc_predefs.h \
 		/home/tommy/raspi/qt5/bin/moc
-	/home/tommy/raspi/qt5/bin/moc $(DEFINES) --include /mnt/d/_Work/ModbusTest/moc_predefs.h -I/home/tommy/raspi/qt5/mkspecs/devices/linux-rasp-pi-g++ -I/mnt/d/_Work/ModbusTest -I/home/tommy/raspi/qt5pi/include -I/home/tommy/raspi/qt5pi/include/QtNetwork -I/home/tommy/raspi/qt5pi/include/QtCore -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0 -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0/arm-linux-gnueabihf -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0/backward -I/opt/cross-pi-gcc/lib/gcc/arm-linux-gnueabihf/10.1.0/include -I/opt/cross-pi-gcc/lib/gcc/arm-linux-gnueabihf/10.1.0/include-fixed -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include modbusslave.h -o moc_modbusslave.cpp
+	/home/tommy/raspi/qt5/bin/moc $(DEFINES) --include /mnt/d/_Work/ModbusTest/moc_predefs.h -I/home/tommy/raspi/qt5/mkspecs/devices/linux-rasp-pi-g++ -I/mnt/d/_Work/ModbusTest -I/home/tommy/raspi/qt5pi/include -I/home/tommy/raspi/qt5pi/include/QtGui -I/home/tommy/raspi/qt5pi/include/QtNetwork -I/home/tommy/raspi/qt5pi/include/QtCore -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0 -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0/arm-linux-gnueabihf -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include/c++/10.1.0/backward -I/opt/cross-pi-gcc/lib/gcc/arm-linux-gnueabihf/10.1.0/include -I/opt/cross-pi-gcc/lib/gcc/arm-linux-gnueabihf/10.1.0/include-fixed -I/opt/cross-pi-gcc/arm-linux-gnueabihf/include modbusslave.h -o moc_modbusslave.cpp
 
 compiler_moc_objc_header_make_all:
 compiler_moc_objc_header_clean:
@@ -921,7 +944,27 @@ main.o: main.cpp /home/tommy/raspi/qt5pi/include/QtCore/QCoreApplication \
 		helpers.h \
 		modbusbase.h \
 		modbusdatatable.h \
-		modbusmaster.h
+		modbusmaster.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/QTime \
+		/home/tommy/raspi/qt5pi/include/QtCore/qdatetime.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/QKeyEvent \
+		/home/tommy/raspi/qt5pi/include/QtGui/qevent.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qtguiglobal.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qtgui-config.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qwindowdefs.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qwindowdefs_win.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qregion.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qrect.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qmargins.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qsize.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qdatastream.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qkeysequence.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qurl.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qurlquery.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qfile.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qfiledevice.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qvector2d.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qtouchdevice.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o main.cpp
 
 modbus.o: modbus.cpp modbus.h \
@@ -1216,10 +1259,30 @@ modbushandler.o: modbushandler.cpp modbushandler.h \
 		/home/tommy/raspi/qt5pi/include/QtNetwork/QTcpSocket \
 		/home/tommy/raspi/qt5pi/include/QtNetwork/qtcpsocket.h \
 		modbusmaster.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/QTime \
+		/home/tommy/raspi/qt5pi/include/QtCore/qdatetime.h \
 		modbusbase.h \
 		modbusdatatable.h \
 		helpers.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/QString \
+		/home/tommy/raspi/qt5pi/include/QtGui/QKeyEvent \
+		/home/tommy/raspi/qt5pi/include/QtGui/qevent.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qtguiglobal.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qtgui-config.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qwindowdefs.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qwindowdefs_win.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qregion.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qrect.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qmargins.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qsize.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qdatastream.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qkeysequence.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qurl.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qurlquery.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qfile.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qfiledevice.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qvector2d.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qtouchdevice.h \
 		modbusslave.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/QtMath \
 		/home/tommy/raspi/qt5pi/include/QtCore/qmath.h
@@ -1298,12 +1361,32 @@ modbusmaster.o: modbusmaster.cpp modbusmaster.h \
 		/home/tommy/raspi/qt5pi/include/QtNetwork/QTcpServer \
 		/home/tommy/raspi/qt5pi/include/QtNetwork/qtcpserver.h \
 		/home/tommy/raspi/qt5pi/include/QtNetwork/qhostaddress.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/QTime \
+		/home/tommy/raspi/qt5pi/include/QtCore/qdatetime.h \
 		modbusbase.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/QObject \
 		modbusdatatable.h \
 		/home/tommy/raspi/qt5pi/include/QtCore/QDebug \
 		helpers.h \
-		/home/tommy/raspi/qt5pi/include/QtCore/QString
+		/home/tommy/raspi/qt5pi/include/QtCore/QString \
+		/home/tommy/raspi/qt5pi/include/QtGui/QKeyEvent \
+		/home/tommy/raspi/qt5pi/include/QtGui/qevent.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qtguiglobal.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qtgui-config.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qwindowdefs.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qwindowdefs_win.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qregion.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qrect.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qmargins.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qsize.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qdatastream.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qkeysequence.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qurl.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qurlquery.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qfile.h \
+		/home/tommy/raspi/qt5pi/include/QtCore/qfiledevice.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qvector2d.h \
+		/home/tommy/raspi/qt5pi/include/QtGui/qtouchdevice.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o modbusmaster.o modbusmaster.cpp
 
 modbusslave.o: modbusslave.cpp modbusslave.h \

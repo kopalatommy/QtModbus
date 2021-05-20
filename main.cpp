@@ -52,7 +52,50 @@ int main(int argc, char *argv[])
 
     ModbusMaster m;
     m.Start("172.22.0.100", 502, 1, datatable);
-    m.ReadCoils(0, 10);
+    /*m.ReadCoils(0, 10);
+    m.ReadDiscreteInputs(0, 10);
+    m.ReadHoldingRegisters(0, 10);
+    m.ReadInputRegisters(0, 10);*/
+
+    /*datatable->SetCoil(0, false);
+    m.WriteSingleCoil(0);
+
+    datatable->SetHoldingRegister(0, 0xFF);
+    m.WriteSingleRegister(0);*/
+
+    /*QList<bool> nCoils = {false, false, false, false, false, true, true, true, true, true};
+    datatable->SetCoils(0, nCoils);
+    qDebug() << "Before";
+    m.WriteMultipleCoils(0, 10);
+    qDebug() << "After";*/
+
+    /*QList<bool> nCoils = {false, true, false, false, true, true, true, true, true, true, true, true, true, true, true, true};
+    datatable->SetCoils(0, nCoils);
+    QList<bool> base = datatable->GetCoils(0, 10);
+    qDebug() << "Base: " << base;
+    QList<char> values = ModbusDatatable::ConvertList(base);
+    qDebug() << "Converted: " << values;
+    for(int i = 0; i < values.length(); i++)
+    {
+        qDebug() << i << " - " << QString::number(values[i]);
+    }
+
+    qDebug() << "Before";
+    m.WriteMultipleCoils(0, 10);
+    qDebug() << "After";*/
+
+    /*QList<bool> testLst = {false, true, true, true, true, true, true, true, true, false};
+    datatable->SetCoils(0, testLst);
+    m.WriteMultipleCoils(0, 10);*/
+
+    QList<short> nRegs = {0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39};
+    datatable->SetHoldingRegisters(0, nRegs);
+    m.WriteMultipleRegisters(0, 10);
+
+    /*void WriteSingleCoil(short address);
+    void WriteSingleRegister(short address);
+    void WriteMultipleCoils(short address, short length);
+    void WriteMultipleRegisters(short address, short length);*/
 
     return a.exec();
 }

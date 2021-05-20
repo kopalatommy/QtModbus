@@ -110,18 +110,31 @@ void ModbusMaster::OnSocketErrorOccured(QAbstractSocket::SocketError error)
 
 void ModbusMaster::ReadyRead()
 {
-    ParseMessage(socket.readAll());
+    char byte;
+    while(socket.bytesAvailable())
+    {
+        socket.read(&byte, 1);
+        current.ReadByte(byte);
+
+        if(current.ReceivedFull())
+        {
+            ParseMessage(current);
+            current.Clear();
+        }
+    }
+    if(current.GetMessage().length() != 0)
+        qDebug() << "Waiting for more bytes";
 }
 
-void ModbusMaster::ParseMessage(QByteArray message)
+void ModbusMaster::ParseMessage(ModbusResponse message)
 {
-    qDebug() << "Received: " << Helpers::HexToDec(message);
+    qDebug() << "Received: " << Helpers::HexToDec(message.GetMessage());
 
     //Check address
-    if(slaveAddress == message.at(6))
+    if(slaveAddress == message.GetUnitID())
     {
         //Check function code
-        switch (message.at(7))
+        switch (message.GetFunctionCode())
         {
         case READ_COILS:
             HandleReadCoilsResponse(message);
@@ -156,12 +169,14 @@ void ModbusMaster::ParseMessage(QByteArray message)
             break;
 
         default:
-            qDebug() << "Bad funct code: " << QString::number(message.at(7));
+            qDebug() << "Bad funct code: " << QString::number(message.GetFunctionCode());
+            qDebug() << "As bits: " << QString::number(message.GetFunctionCode(), 2);
+            qDebug() << "As uint: " << QString::number(0xFF & static_cast<uchar>(message.GetFunctionCode()));
         }
     }
     else
     {
-        qDebug() << "Received bad address: " << QString::number(message.at(0)) << " Address: " << QString::number(slaveAddress);
+        qDebug() << "Received bad Unit ID: " << QString::number(message.GetUnitID()) << " Address: " << QString::number(slaveAddress);
     }
 }
 
@@ -204,7 +219,7 @@ void ModbusMaster::ReadCoils(short startAddress, short length)
 
     qDebug() << "Writing: " << Helpers::HexToDec(message);
 
-    messages[transactionID.word] = QPair<QTime, QByteArray>(QTime::currentTime(), message);
+    messages[transactionID.word] = QPair<QTime, ModbusResponse>(QTime::currentTime(), ModbusResponse(message));
 
     socket.write(message);
 
@@ -249,7 +264,7 @@ void ModbusMaster::ReadDiscreteInputs(short address, short length)
     qDebug() << "Writing: " << Helpers::HexToDec(message);
 
     socket.write(message);
-    messages[transactionID.word] = QPair<QTime, QByteArray>(QTime::currentTime(), message);
+    messages[transactionID.word] = QPair<QTime, ModbusResponse>(QTime::currentTime(), ModbusResponse(message));
 
     //Increment the id
     transactionID.word += 1;
@@ -293,7 +308,7 @@ void ModbusMaster::ReadHoldingRegisters(short address, short length)
     qDebug() << "Writing: " << Helpers::HexToDec(message);
 
     socket.write(message);
-    messages[transactionID.word] = QPair<QTime, QByteArray>(QTime::currentTime(), message);
+    messages[transactionID.word] = QPair<QTime, ModbusResponse>(QTime::currentTime(), ModbusResponse(message));
 
     //Increment the id
     transactionID.word += 1;
@@ -337,7 +352,7 @@ void ModbusMaster::ReadInputRegisters(short address, short length)
 
     socket.write(message);
 
-    messages[transactionID.word] = QPair<QTime, QByteArray>(QTime::currentTime(), message);
+    messages[transactionID.word] = QPair<QTime, ModbusResponse>(QTime::currentTime(), ModbusResponse(message));
 
     //Increment the id
     transactionID.word += 1;
@@ -371,16 +386,13 @@ void ModbusMaster::WriteSingleCoil(short address)
     message.append(start.bytes[1]);
     message.append(start.bytes[0]);
 
-    //Append the value of the coil
-    //ToDo, integrate with table
-    message.append(CHAR_MAX);
-    message.append('\0');
-
-    qDebug() << "Writing: " << Helpers::HexToDec(message);
+    start.word = dataTable->GetCoil(address) ? 0xFF : 0;
+    message.append(start.bytes[1]);
+    message.append(start.bytes[0]);
 
     socket.write(message);
 
-    messages[transactionID.word] = QPair<QTime, QByteArray>(QTime::currentTime(), message);
+    messages[transactionID.word] = QPair<QTime, ModbusResponse>(QTime::currentTime(), ModbusResponse(message));
 
     //Increment the id
     transactionID.word += 1;
@@ -414,18 +426,15 @@ void ModbusMaster::WriteSingleRegister(short address)
     message.append(start.bytes[1]);
     message.append(start.bytes[0]);
 
-    //Append the value of the coil
-    //ToDo, integrate with table
+    //Append the value of the register
     byteArray reg;
-    reg.word = 0xFF;
+    reg.word = dataTable->GetHoldingRegister(address);
     message.append(reg.bytes[1]);
     message.append(reg.bytes[0]);
 
-    qDebug() << "Writing: " << Helpers::HexToDec(message);
-
     socket.write(message);
 
-    messages[transactionID.word] = QPair<QTime, QByteArray>(QTime::currentTime(), message);
+    messages[transactionID.word] = QPair<QTime, ModbusResponse>(QTime::currentTime(), ModbusResponse(message));
 
     //Increment the id
     transactionID.word += 1;
@@ -443,9 +452,13 @@ void ModbusMaster::WriteMultipleCoils(short address, short length)
     message.append('\0');
     message.append('\0');
 
-    //Append the length of the remaining bytes, should be 6
-    message.append('\0');
-    message.append('\6');
+    //Append the length of the remaining bytes
+    byteArray len;
+    len.word = 7 + (length / 8);
+    if(length % 8 != 0)
+        len.word++;
+    message.append(len.bytes[1]);
+    message.append(len.bytes[0]);
 
     //Append slave Unit ID
     message.append(slaveAddress);
@@ -460,18 +473,32 @@ void ModbusMaster::WriteMultipleCoils(short address, short length)
     message.append(start.bytes[0]);
 
     //Append the number of coils
-    byteArray len;
     len.word = length;
     message.append(len.bytes[1]);
     message.append(len.bytes[0]);
 
-    //ToDo, integrate table
+    //Append the bytes
+    qDebug() << "Values: " << dataTable->GetCoils(address, length);
+    QList<char> bytes = ModbusDatatable::ConvertList(dataTable->GetCoils(address, length));
 
-    qDebug() << "Writing: " << Helpers::HexToDec(message);
+    message.append(static_cast<char>(bytes.length()));
+
+    /*for(int i = bytes.length() - 1; i >= 0; i--)
+    {
+        qDebug() << i << " : " << QString::number(bytes[i], 2);
+        message.append(bytes[i]);
+    }*/
+    for(int i = 0; i < bytes.length(); i++)
+    {
+        qDebug() << i << " : " << QString::number(bytes[i], 2);
+        message.append(bytes[i]);
+    }
+
+    qDebug() << "WritingMultipleCoils: " << Helpers::HexToDec(message);
 
     socket.write(message);
 
-    messages[transactionID.word] = QPair<QTime, QByteArray>(QTime::currentTime(), message);
+    messages[transactionID.word] = QPair<QTime, ModbusResponse>(QTime::currentTime(), ModbusResponse(message));
 
     //Increment the id
     transactionID.word += 1;
@@ -489,15 +516,17 @@ void ModbusMaster::WriteMultipleRegisters(short address, short length)
     message.append('\0');
     message.append('\0');
 
-    //Append the length of the remaining bytes, should be 6
-    message.append('\0');
-    message.append('\6');
+    //Append the length of the remaining bytes
+    byteArray len;
+    len.word = 7 + (length * 2);
+    message.append(len.bytes[1]);
+    message.append(len.bytes[0]);
 
     //Append slave Unit ID
     message.append(slaveAddress);
 
     //Append the function code
-    message.append(SET_MULTIPLE_COILS);
+    message.append(SET_MULTIPLE_REGISTERS);
 
     //Append the starting address
     byteArray start;
@@ -506,16 +535,25 @@ void ModbusMaster::WriteMultipleRegisters(short address, short length)
     message.append(start.bytes[0]);
 
     //Append the number of coils
-    byteArray len;
     len.word = length;
     message.append(len.bytes[1]);
     message.append(len.bytes[0]);
 
-    //ToDo, integrate table
+    //Add remaining bytes count
+    message.append(static_cast<char>(len.word * 2));
 
-    qDebug() << "Writing: " << Helpers::HexToDec(message);
+    byteArray reg;
+    QList<short> values = dataTable->GetHoldingRegisters(start.word, len.word);
+    for(int i = 0; i < len.word; i++)
+    {
+        reg.word = values[i];
+        message.append(reg.bytes[1]);
+        message.append(reg.bytes[0]);
+    }
 
     socket.write(message);
+
+    qDebug() << Helpers::HexToDec(message);
 
     messages[transactionID.word] = QPair<QTime, QByteArray>(QTime::currentTime(), message);
 
@@ -523,299 +561,187 @@ void ModbusMaster::WriteMultipleRegisters(short address, short length)
     transactionID.word += 1;
 }
 
-void ModbusMaster::HandleReadCoilsResponse(QByteArray message)
+void ModbusMaster::HandleReadCoilsResponse(ModbusResponse message)
 {
-    byteArray messageID;
-    messageID.bytes[1] = message[0];
-    messageID.bytes[0] = message[1];
+    ModbusResponse response(message);
+    ModbusResponse sent;
 
-    byteArray protocol;
-    protocol.bytes[1] = message[2];
-    protocol.bytes[0] = message[3];
-
-    byteArray messageLength;
-    messageLength.bytes[1] = message[4];
-    messageLength.bytes[0] = message[5];
-
-    if(messageID.word != responseID)
+    if(!messages.contains(response.GetTransactionID()))
     {
-        qDebug() << "Error: Received different message";
+        qDebug() << "Not expecting a response to a message with transaction id " << response.GetTransactionID();
         return;
     }
 
-    //The header bytes are ignored
-    if(message.length() - 6 == messageLength.word)
-    {
-        char slaveAddress = message[6];
-        char functCode = message[7];
+    sent = messages[response.GetTransactionID()].second;
+    messages.remove(response.GetTransactionID());
 
-        char dataBytes = message[8];
-
-        QList<char> values;
-        for(int i = 0; i < dataBytes; i++)
-        {
-            values.append(message[9 + i]);
-        }
-        //Convert to bool list
-        QList<bool> lst = ModbusDatatable::ConvertList(values);
-        for(int i = 0; i < valueCount; i++)
-        {
-            qDebug() << "Setting coil " << i << " to " << lst[i];
-            dataTable->SetCoil(valueStart + i, lst[i]);
-        }
-    }
-    else
+    //Check if the received equals the request
+    if(response.GetDataBytes() * 8 < sent.GetQuantity() )
     {
-        qDebug() << "Received bad response to ReadCoils";
-        qDebug() << "Received " << (message.length() - 6) << " Expected: " << messageLength.word;
+        qDebug() << "Error: Received incorrect bytes from ReadCoils response";
+        return;
     }
+
+    //Parse the data
+    QByteArray data = response.GetData();
+    //Remove non data bytes
+    data.remove(0, 3);
+    dataTable->SetCoils(sent.GetStartAddress(), data, sent.GetQuantity());
 }
 
-void ModbusMaster::HandleReadDiscreteInputsResponse(QByteArray message)
+void ModbusMaster::HandleReadDiscreteInputsResponse(ModbusResponse message)
 {
-    byteArray messageID;
-    messageID.bytes[1] = message[0];
-    messageID.bytes[0] = message[1];
+    ModbusResponse response(message);
+    ModbusResponse sent;
 
-    byteArray protocol;
-    protocol.bytes[1] = message[2];
-    protocol.bytes[0] = message[3];
-
-    byteArray messageLength;
-    messageLength.bytes[1] = message[4];
-    messageLength.bytes[0] = message[5];
-
-    if(messageID.word != responseID)
+    if(!messages.contains(response.GetTransactionID()))
     {
-        qDebug() << "Error: Received different message";
+        qDebug() << "Not expecting a response to a message with transaction id " << response.GetTransactionID();
         return;
     }
 
-    //The header bytes are ignored
-    if(message.length() - 6 == messageLength.word)
-    {
-        char slaveAddress = message[6];
-        char functCode = message[7];
+    sent = messages[response.GetTransactionID()].second;
+    messages.remove(response.GetTransactionID());
 
-        char dataBytes = message[8];
-
-        QList<char> values;
-        for(int i = 0; i < dataBytes; i++)
-        {
-            values.append(message[9 + i]);
-        }
-        //Convert to bool list
-        QList<bool> lst = ModbusDatatable::ConvertList(values);
-        for(int i = 0; i < valueCount; i++)
-        {
-            dataTable->SetDiscreteInput(valueStart + i, lst[i]);
-        }
-    }
-    else
+    //Check if the received equals the request
+    if(response.GetDataBytes() * 8 < sent.GetQuantity() )
     {
-        qDebug() << "Received bad response to ReadCoils";
-        qDebug() << "Received " << (message.length() - 6) << " Expected: " << messageLength.word;
+        qDebug() << "Error: Received incorrect bytes from ReadCoils response";
+        return;
     }
+
+    //Parse the data
+    QByteArray data = response.GetData();
+    //Remove non data bytes
+    data.remove(0, 3);
+    dataTable->SetDiscreteInputs(sent.GetStartAddress(), data, sent.GetQuantity());
 }
 
-void ModbusMaster::HandleReadHoldingRegistersResponse(QByteArray message)
+void ModbusMaster::HandleReadHoldingRegistersResponse(ModbusResponse message)
 {
-    byteArray messageID;
-    messageID.bytes[1] = message[0];
-    messageID.bytes[0] = message[1];
+    ModbusResponse response(message);
+    ModbusResponse sent;
 
-    byteArray protocol;
-    protocol.bytes[1] = message[2];
-    protocol.bytes[0] = message[3];
-
-    byteArray messageLength;
-    messageLength.bytes[1] = message[4];
-    messageLength.bytes[0] = message[5];
-
-    if(messageID.word != responseID)
+    if(!messages.contains(response.GetTransactionID()))
     {
-        qDebug() << "Error: Received different message";
+        qDebug() << "Not expecting a response to a message with transaction id " << response.GetTransactionID();
         return;
     }
 
-    //The header bytes are ignored
-    if(message.length() - 6 == messageLength.word)
-    {
-        char slaveAddress = message[6];
-        char functCode = message[7];
+    sent = messages[response.GetTransactionID()].second;
+    messages.remove(response.GetTransactionID());
 
-        char dataBytes = message[8];
-
-        QList<char> values;
-        for(int i = 0; i < dataBytes; i++)
-        {
-            values.append(message[9 + i]);
-        }
-        //Convert to bool list
-        QList<bool> lst = ModbusDatatable::ConvertList(values);
-        for(int i = 0; i < valueCount; i++)
-        {
-            dataTable->SetDiscreteInput(valueStart + i, lst[i]);
-        }
-    }
-    else
+    //Check if the received equals the request
+    if((response.GetDataBytes() / 2) != sent.GetQuantity())
     {
-        qDebug() << "Received bad response to ReadCoils";
-        qDebug() << "Received " << (message.length() - 6) << " Expected: " << messageLength.word;
+        qDebug() << "Error: Received incorrect bytes from ReadCoils response";
+        return;
     }
+
+    //Parse the data
+    QByteArray data = response.GetData();
+    //Remove non data bytes
+    data.remove(0, 3);
+    dataTable->SetHoldingRegisters(sent.GetStartAddress(), data);
 }
 
-void ModbusMaster::HandleReadInputRegistersResponse(QByteArray message)
+void ModbusMaster::HandleReadInputRegistersResponse(ModbusResponse message)
 {
-    byteArray messageID;
-    messageID.bytes[1] = message[0];
-    messageID.bytes[0] = message[1];
+    ModbusResponse response(message);
+    ModbusResponse sent;
 
-    byteArray protocol;
-    protocol.bytes[1] = message[2];
-    protocol.bytes[0] = message[3];
-
-    byteArray messageLength;
-    messageLength.bytes[1] = message[4];
-    messageLength.bytes[0] = message[5];
-
-    if(messageID.word != responseID)
+    if(!messages.contains(response.GetTransactionID()))
     {
-        qDebug() << "Error: Received different message";
+        qDebug() << "Not expecting a response to a message with transaction id " << response.GetTransactionID();
         return;
     }
 
-    //The header bytes are ignored
-    if(message.length() - 6 == messageLength.word)
+    sent = messages[response.GetTransactionID()].second;
+    messages.remove(response.GetTransactionID());
+
+    //Check if the received equals the request
+    if((response.GetDataBytes() / 2) != sent.GetQuantity())
     {
-        char slaveAddress = message[6];
-        char functCode = message[7];
-
-        char dataBytes = message[8];
-
-        QList<short> values;
-        byteArray arr;
-        for(int i = 0; i < dataBytes / 2; i++)
-        {
-            arr.bytes[1] = message[9 + (i * 2)];
-            arr.bytes[0] = message[10 + (i * 2)];
-
-            values.append(arr.word);
-        }
-        dataTable->SetInputRegisters(valueStart, values);
+        qDebug() << "Error: Received incorrect bytes from ReadCoils response";
+        return;
     }
-    else
-    {
-        qDebug() << "Received bad response to ReadCoils";
-        qDebug() << "Received " << (message.length() - 6) << " Expected: " << messageLength.word;
-    }
+
+    //Parse the data
+    QByteArray data = response.GetData();
+    //Remove non data bytes
+    data.remove(0, 3);
+    dataTable->SetInputRegisters(sent.GetStartAddress(), data);
 }
 
 //This does nothing, the message is echoed back by the slave
-void ModbusMaster::HandleWriteSingleCoilResponse(QByteArray message)
+void ModbusMaster::HandleWriteSingleCoilResponse(ModbusResponse message)
 {
-    byteArray messageID;
-    messageID.bytes[1] = message[0];
-    messageID.bytes[0] = message[1];
+    ModbusResponse response(message);
+    ModbusResponse sent;
 
-    byteArray protocol;
-    protocol.bytes[1] = message[2];
-    protocol.bytes[0] = message[3];
-
-    byteArray messageLength;
-    messageLength.bytes[1] = message[4];
-    messageLength.bytes[0] = message[5];
-
-    if(messageID.word != responseID)
+    if(!messages.contains(response.GetTransactionID()))
     {
-        qDebug() << "Error: Received different message";
+        qDebug() << "Not expecting a response to a message with transaction id " << response.GetTransactionID();
         return;
     }
 
-    //The header bytes are ignored
-    if(message.length() - 6 == messageLength.word)
-    {
+    sent = messages[response.GetTransactionID()].second;
+    messages.remove(response.GetTransactionID());
 
-    }
+    if(response.GetMessage() != sent.GetMessage())
+        qDebug() << "Error: received bad response for WriteSingleCoil";
 }
 
-void ModbusMaster::HandleWriteSingleRegisterResponse(QByteArray message)
+void ModbusMaster::HandleWriteSingleRegisterResponse(ModbusResponse message)
 {
-    byteArray messageID;
-    messageID.bytes[1] = message[0];
-    messageID.bytes[0] = message[1];
+    ModbusResponse response(message);
+    ModbusResponse sent;
 
-    byteArray protocol;
-    protocol.bytes[1] = message[2];
-    protocol.bytes[0] = message[3];
-
-    byteArray messageLength;
-    messageLength.bytes[1] = message[4];
-    messageLength.bytes[0] = message[5];
-
-    if(messageID.word != responseID)
+    if(!messages.contains(response.GetTransactionID()))
     {
-        qDebug() << "Error: Received different message";
+        qDebug() << "Not expecting a response to a message with transaction id " << response.GetTransactionID();
         return;
     }
 
-    //The header bytes are ignored
-    if(message.length() - 6 == messageLength.word)
-    {
+    sent = messages[response.GetTransactionID()].second;
+    messages.remove(response.GetTransactionID());
 
-    }
+    if(response.GetMessage() != sent.GetMessage())
+        qDebug() << "Error: received bad response for WriteSingleRegister";
 }
 
-void ModbusMaster::HandleWriteMultipleCoilsResponse(QByteArray message)
+void ModbusMaster::HandleWriteMultipleCoilsResponse(ModbusResponse message)
 {
-    byteArray messageID;
-    messageID.bytes[1] = message[0];
-    messageID.bytes[0] = message[1];
+    ModbusResponse response(message);
+    ModbusResponse sent;
 
-    byteArray protocol;
-    protocol.bytes[1] = message[2];
-    protocol.bytes[0] = message[3];
-
-    byteArray messageLength;
-    messageLength.bytes[1] = message[4];
-    messageLength.bytes[0] = message[5];
-
-    if(messageID.word != responseID)
+    if(!messages.contains(response.GetTransactionID()))
     {
-        qDebug() << "Error: Received different message";
+        qDebug() << "Not expecting a response to a message with transaction id " << response.GetTransactionID();
         return;
     }
 
-    //The header bytes are ignored
-    if(message.length() - 6 == messageLength.word)
-    {
+    sent = messages[response.GetTransactionID()].second;
+    messages.remove(response.GetTransactionID());
 
-    }
+    if(response.GetStartAddress() != sent.GetStartAddress() || response.GetQuantity() != sent.GetQuantity())
+        qDebug() << "Error: received bad response for WriteMultipleCoils";
 }
 
-void ModbusMaster::HandleWriteMultipleRegistersResponse(QByteArray message)
+void ModbusMaster::HandleWriteMultipleRegistersResponse(ModbusResponse message)
 {
-    byteArray messageID;
-    messageID.bytes[1] = message[0];
-    messageID.bytes[0] = message[1];
+    ModbusResponse response(message);
+    ModbusResponse sent;
 
-    byteArray protocol;
-    protocol.bytes[1] = message[2];
-    protocol.bytes[0] = message[3];
-
-    byteArray messageLength;
-    messageLength.bytes[1] = message[4];
-    messageLength.bytes[0] = message[5];
-
-    if(messageID.word != responseID)
+    if(!messages.contains(response.GetTransactionID()))
     {
-        qDebug() << "Error: Received different message";
+        qDebug() << "Not expecting a response to a message with transaction id " << response.GetTransactionID();
         return;
     }
 
-    //The header bytes are ignored
-    if(message.length() - 6 == messageLength.word)
-    {
+    sent = messages[response.GetTransactionID()].second;
+    messages.remove(response.GetTransactionID());
 
-    }
+    if(response.GetStartAddress() != sent.GetStartAddress() || response.GetQuantity() != sent.GetQuantity())
+        qDebug() << "Error: received bad response for WriteMultipleRegisters";
 }

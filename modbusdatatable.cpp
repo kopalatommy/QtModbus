@@ -107,7 +107,7 @@ void ModbusDatatable::SetCoil(int address, bool value)
     }
     else
     {
-        throw new std::exception("Index out of bounds in SetCoil");
+        throw new std::runtime_error("Index out of bounds in SetCoil");
     }
 }
 
@@ -117,6 +117,7 @@ void ModbusDatatable::SetCoils(int address, QList<bool> values)
     {
         for(int i = 0; i < values.length(); i++)
         {
+            qDebug() << "S " << (i + address) << " : " << values[i];
             coils[i + address] = values[i];
         }
     }
@@ -126,6 +127,63 @@ void ModbusDatatable::SetCoils(int address, QList<bool> values)
     }
 }
 
+void ModbusDatatable::SetCoils(int address, QList<char> values, int quantity)
+{
+    if(address >= 0 && address + quantity < numberOfCoils)
+    {
+        char current;
+
+        for(int i = 0, bitIndex; i < values.length(); i++)
+        {
+            current = values.at(i);
+            for(bitIndex = 0; bitIndex < 8; bitIndex++)
+            {
+                qDebug() << (address + (i * 8) + bitIndex) << " = " << CheckBit(current, bitIndex);
+                coils[address + (i * 8) + bitIndex] = CheckBit(current, bitIndex);
+                quantity--;
+                if(quantity == 0)
+                    return;
+            }
+        }
+        if(quantity != 0)
+        {
+            qDebug() << "Error: Not enough bytes for the provided quantity";
+        }
+    }
+    else
+    {
+        throw new std::runtime_error("Error: Index out of bounds in SetCoils");
+    }
+}
+
+void ModbusDatatable::SetCoils(int address, QByteArray values, int quantity)
+{
+    if(address >= 0 && address + quantity < numberOfCoils)
+    {
+        char current;
+
+        for(int i = 0, bitIndex; i < values.length(); i++)
+        {
+            current = values.at(i);
+            for(bitIndex = 0; bitIndex < 8; bitIndex++)
+            {
+                qDebug() << (address + (i * 8) + bitIndex) << " = " << CheckBit(current, bitIndex);
+                coils[address + (i * 8) + bitIndex] = CheckBit(current, bitIndex);
+                quantity--;
+                if(quantity == 0)
+                    return;
+            }
+        }
+        if(quantity != 0)
+        {
+            qDebug() << "Error: Not enough bytes for the provided quantity";
+        }
+    }
+    else
+    {
+        throw new std::runtime_error("Error: Index out of bounds in SetCoils");
+    }
+}
 
 bool ModbusDatatable::GetCoil(int address)
 {
@@ -163,7 +221,7 @@ void ModbusDatatable::AddDiscreteInputs(int quantity)
     if(quantity > 0 && quantity + numberOfDiscreteInputs < MAX_DISCRETE_INPUTS)
     {
         //Create the new array
-        bool * newInputs = new bool[quantity + numberOfDiscreteInputs];
+        bool * newInputs = new bool[static_cast<uint>(quantity + numberOfDiscreteInputs)];
         for(int i = 0; i < numberOfDiscreteInputs + quantity; i++)
             newInputs[i] = 0;
         //Copy the new values
@@ -186,7 +244,7 @@ void ModbusDatatable::AddDiscreteInputs(int quantity, QList<bool> initialValues)
     if(quantity > 0 && quantity == initialValues.count() && quantity + numberOfDiscreteInputs < MAX_DISCRETE_INPUTS)
     {
         //Create the new array
-        bool * newInputs = new bool[quantity + numberOfDiscreteInputs];
+        bool * newInputs = new bool[static_cast<uint>(quantity + numberOfDiscreteInputs)];
         for(int i = 0; i < numberOfDiscreteInputs + quantity; i++)
             newInputs[i] = 0;
         //Copy the new values
@@ -219,7 +277,7 @@ void ModbusDatatable::ResizeDiscreteInputs(int quantity)
         else
         {
             //Create the new array
-            bool * newInputs = new bool[quantity];
+            bool * newInputs = new bool[static_cast<uint>(quantity)];
             //Copy the previous data
             CopyBools(newInputs, newInputs, quantity);
             //Free the previous version
@@ -241,20 +299,19 @@ int ModbusDatatable::GetNumberOfDiscreteInputs()
     return numberOfDiscreteInputs;
 }
 
-bool ModbusDatatable::SetDiscreteInput(int address, bool value)
+void ModbusDatatable::SetDiscreteInput(int address, bool value)
 {
     if(address >= 0 && address < numberOfDiscreteInputs)
     {
         discreteInputs[address] = value;
-        return true;
     }
     else
     {
-        return false;
+        throw new std::runtime_error("Error: Index out of bounds in SetDiscreteInput");
     }
 }
 
-bool ModbusDatatable::SetDiscreteInputs(int address, QList<bool> values)
+void ModbusDatatable::SetDiscreteInputs(int address, QList<bool> values)
 {
     if(address >= 0 && address + values.length() < numberOfDiscreteInputs)
     {
@@ -262,11 +319,67 @@ bool ModbusDatatable::SetDiscreteInputs(int address, QList<bool> values)
         {
             discreteInputs[address + i] = values[i];
         }
-        return true;
     }
     else
     {
         throw new std::runtime_error("Error: Index out of bounds in Set Discrete Inputs");
+    }
+}
+
+void ModbusDatatable::SetDiscreteInputs(int address, QList<char> values, int quantity)
+{
+    if(address >= 0 && address + quantity < numberOfDiscreteInputs)
+    {
+        char current;
+
+        for(int i = 0, bitIndex; i < values.length(); i++)
+        {
+            current = values.at(i);
+            for(bitIndex = 0; bitIndex < 8; bitIndex++)
+            {
+                discreteInputs[address + (i * 8) + bitIndex] = CheckBit(current, bitIndex);
+                quantity--;
+                if(quantity == 0)
+                    return;
+            }
+        }
+        if(quantity != 0)
+        {
+            qDebug() << "Error: Not enough bytes for the provided quantity";
+        }
+    }
+    else
+    {
+        throw new std::runtime_error("Error: Index out of bound in SetDiscreteInputs");
+    }
+}
+
+void ModbusDatatable::SetDiscreteInputs(int address, QByteArray values, int quantity)
+{
+    if(address >= 0 && address + quantity < numberOfDiscreteInputs)
+    {
+        char current;
+
+        for(int i = 0, bitIndex; i < values.length(); i++)
+        {
+            current = values.at(i);
+            for(bitIndex = 0; bitIndex < 8; bitIndex++)
+            {
+                qDebug() << (address + (i * 8) + bitIndex) << " -> " << CheckBit(current, bitIndex);
+                discreteInputs[address + (i * 8) + bitIndex] = CheckBit(current, bitIndex);
+                quantity--;
+                if(quantity == 0)
+                    return;
+            }
+        }
+        if(quantity != 0)
+        {
+            qDebug() << "Error: Not enough bytes for the provided quantity";
+        }
+    }
+    else
+    {
+        throw new std::runtime_error("Error: Index out of bound in SetDiscreteInputs");
     }
 }
 
@@ -304,7 +417,7 @@ void ModbusDatatable::AddInputRegisters(int quantity)
     if(quantity >= 0 && numberOfInputRegisters + quantity < MAX_HOLDING_REGISTERS)
     {
         //Create the new array
-        short * newRegs = new short[quantity + numberOfInputRegisters];
+        short * newRegs = new short[static_cast<uint>(quantity + numberOfInputRegisters)];
         for(int i = 0; i < numberOfInputRegisters + quantity; i++)
             newRegs[i] = 0;
         //Copy over the new values
@@ -327,7 +440,7 @@ void ModbusDatatable::AddInputRegisters(int quantity, QList<short> initialValues
     if(quantity >= 0 && numberOfInputRegisters + quantity < MAX_HOLDING_REGISTERS)
     {
         //Create the new array
-        short * newRegs = new short[quantity + numberOfInputRegisters];
+        short * newRegs = new short[static_cast<uint>(quantity + numberOfInputRegisters)];
         for(int i = 0; i < numberOfInputRegisters + quantity; i++)
             newRegs[i] = 0;
         //Copy over the new values
@@ -383,12 +496,11 @@ int ModbusDatatable::GetNumberOfInputRegisters()
     return numberOfInputRegisters;
 }
 
-bool ModbusDatatable::SetInputRegister(int address, short value)
+void ModbusDatatable::SetInputRegister(int address, short value)
 {
     if(address >= 0 && address <= numberOfInputRegisters)
     {
         inputRegisters[address] = value;
-        return true;
     }
     else
     {
@@ -396,7 +508,7 @@ bool ModbusDatatable::SetInputRegister(int address, short value)
     }
 }
 
-bool ModbusDatatable::SetInputRegisters(int address, QList<short> values)
+void ModbusDatatable::SetInputRegisters(int address, QList<short> values)
 {
     if(address >= 0 && address + values.length() < numberOfInputRegisters)
     {
@@ -404,13 +516,49 @@ bool ModbusDatatable::SetInputRegisters(int address, QList<short> values)
         {
             inputRegisters[i + address] = values[i];
         }
-        return true;
     }
     else
     {
         qDebug() << "Address: " << address;
         qDebug() << "Number of input registers: " << numberOfInputRegisters;
         throw new std::runtime_error("Error: Unable to add Input Registers");
+    }
+}
+
+void ModbusDatatable::SetInputRegisters(int address, QList<char> values)
+{
+    if(address >= 0 && address + (values.length() / 2) < numberOfInputRegisters)
+    {
+        byteArray temp;
+        for(int i = 0; i < (values.length() / 2); i++)
+        {
+            temp.bytes[1] = values[i * 2];
+            temp.bytes[0] = values[i * 2 + 1];
+            inputRegisters[i + address] = temp.word;
+        }
+    }
+    else
+    {
+        throw new std::runtime_error("Error: Index out of bounds in SetInputRegisters");
+    }
+}
+
+void ModbusDatatable::SetInputRegisters(int address, QByteArray values)
+{
+    if(address >= 0 && address + (values.length() / 2) < numberOfInputRegisters)
+    {
+        byteArray temp;
+        for(int i = 0; i < (values.length() / 2); i++)
+        {
+            temp.bytes[1] = values[i * 2];
+            temp.bytes[0] = values[i * 2 + 1];
+            qDebug() << (i + address) << " ^ " << temp.word;
+            inputRegisters[i + address] = temp.word;
+        }
+    }
+    else
+    {
+        throw new std::runtime_error("Error: Index out of bounds in SetInputRegisters");
     }
 }
 
@@ -524,11 +672,11 @@ int ModbusDatatable::GetNumberOfHoldingRegisters()
     return numberOfHoldingRegisters;
 }
 
-bool ModbusDatatable::SetHoldingRegister(int address, short value)
+void ModbusDatatable::SetHoldingRegister(int address, short value)
 {
     if(address >= 0 && address < numberOfHoldingRegisters)
     {
-        return holdingRegisters[address];
+        holdingRegisters[address] = value;
     }
     else
     {
@@ -536,7 +684,7 @@ bool ModbusDatatable::SetHoldingRegister(int address, short value)
     }
 }
 
-bool ModbusDatatable::SetHoldingRegisters(int address, QList<short> values)
+void ModbusDatatable::SetHoldingRegisters(int address, QList<short> values)
 {
     if(address >= 0 && address + values.length() < numberOfHoldingRegisters)
     {
@@ -544,11 +692,49 @@ bool ModbusDatatable::SetHoldingRegisters(int address, QList<short> values)
         {
             holdingRegisters[i + address] = values[i];
         }
-        return true;
     }
     else
     {
         throw new std::runtime_error("Error: Unable to set holding registers");
+    }
+}
+
+void ModbusDatatable::SetHoldingRegisters(int address, QList<char> values)
+{
+    if(address >= 0 && address + (values.length() / 2) < numberOfHoldingRegisters)
+    {
+        byteArray temp;
+        for(int i = 0; i < (values.length() / 2); i++)
+        {
+            temp.bytes[1] = values[i * 2];
+            temp.bytes[0] = values[i * 2 + 1];
+            holdingRegisters[i + address] = temp.word;
+        }
+    }
+    else
+    {
+        throw new std::runtime_error("Error: Index out of bounds in SetHoldingRegisters");
+    }
+}
+
+void ModbusDatatable::SetHoldingRegisters(int address, QByteArray values)
+{
+    if(address >= 0 && address + (values.length() / 2) < numberOfHoldingRegisters)
+    {
+        byteArray temp;
+        for(int i = 0; i < (values.length() / 2); i++)
+        {
+            temp.bytes[1] = values[i * 2];
+            temp.bytes[0] = values[i * 2 + 1];
+
+            qDebug() << (i + address) << " - " << temp.word;
+
+            holdingRegisters[i + address] = temp.word;
+        }
+    }
+    else
+    {
+        throw new std::runtime_error("Error: Index out of bounds in SetHoldingRegisters");
     }
 }
 
@@ -602,17 +788,13 @@ QList<char> ModbusDatatable::ConvertList(QList<bool> original)
     char temp = 0;
     for(int i = 0; i < original.length(); i++)
     {
-        temp <<= 1;
-
         if(i % 8 == 0 && i != 0)
         {
             values.append(temp);
             temp = 0;
         }
-
-        temp |= static_cast<char>(original[i]);
+        temp += (original[i] << (i % 8)); // 0 or 1 times 2 to the ith power
     }
-
     values.append(temp);
 
     return values;

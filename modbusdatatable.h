@@ -9,6 +9,11 @@
 #define MAX_INPUT_REGISTERS 65535
 #define MAX_HOLDING_REGISTERS 65535
 
+union byteArray{
+    char bytes[2];
+    short word;
+};
+
 class ModbusDatatable : public QObject
 {
     Q_OBJECT
@@ -24,6 +29,8 @@ public:
     int GetNumberOfCoils();
     void SetCoil(int address, bool value);
     void SetCoils(int address, QList<bool> values);
+    void SetCoils(int address, QList<char> values, int quantity);
+    void SetCoils(int address, QByteArray values, int quantity);
     bool GetCoil(int address);
     QList<bool> GetCoils(int startAddress, int quantity);
 
@@ -31,8 +38,10 @@ public:
     void AddDiscreteInputs(int quantity, QList<bool> initialValues);
     void ResizeDiscreteInputs(int quantity);
     int GetNumberOfDiscreteInputs();
-    bool SetDiscreteInput(int address, bool value);
-    bool SetDiscreteInputs(int address, QList<bool> values);
+    void SetDiscreteInput(int address, bool value);
+    void SetDiscreteInputs(int address, QList<bool> values);
+    void SetDiscreteInputs(int address, QList<char> values, int quantity);
+    void SetDiscreteInputs(int address, QByteArray values, int quantity);
     bool GetDiscreteInput(int address);
     QList<bool> GetDiscreteInputs(int startAddress, int quantity);
 
@@ -40,8 +49,10 @@ public:
     void AddInputRegisters(int quantity, QList<short> initialValues);
     void ResizeInputRegisters(int quantity);
     int GetNumberOfInputRegisters();
-    bool SetInputRegister(int address, short value);
-    bool SetInputRegisters(int address, QList<short> values);
+    void SetInputRegister(int address, short value);
+    void SetInputRegisters(int address, QList<short> values);
+    void SetInputRegisters(int address, QList<char> values);
+    void SetInputRegisters(int address, QByteArray values);
     short GetInputRegister(int address);
     QList<short> GetInputRegisters(int startAddress, int quantity);
 
@@ -49,8 +60,10 @@ public:
     void AddHoldingRegisters(int quantity, QList<short> initialValues);
     void ResizeHoldingRegisters(int quantity);
     int GetNumberOfHoldingRegisters();
-    bool SetHoldingRegister(int address, short value);
-    bool SetHoldingRegisters(int address, QList<short> values);
+    void SetHoldingRegister(int address, short value);
+    void SetHoldingRegisters(int address, QList<short> values);
+    void SetHoldingRegisters(int address, QList<char> values);
+    void SetHoldingRegisters(int address, QByteArray values);
     short GetHoldingRegister(int address);
     QList<short> GetHoldingRegisters(int startAddress, int quantity);
 
